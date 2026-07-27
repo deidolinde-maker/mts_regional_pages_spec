@@ -1,0 +1,65 @@
+{
+  "csv_path": "wp_landing_locations.csv",
+  "base_url": "https://mts-internet.online",
+  "default_url_template": "{base_url}/{slug}",
+  "url_templates_by_source_type": {
+    "default": "{base_url}/{slug}",
+    "regions": "{base_url}/{slug}",
+    "districts": "{base_url}/{slug}"
+  },
+  "theme_cookie": {
+    "name": "theme_ab_variant",
+    "value": "b",
+    "domain": ".mts-internet.online",
+    "path": "/"
+  },
+  "timeouts_ms": {
+    "navigation": 30000,
+    "location_lookup": 3000,
+    "cookie_lookup": 3000
+  },
+  "selectors": {
+    "location": [
+      "nav.burger-nav__menu .header__city--mobile .city-bold",
+      "nav.burger-nav__menu .header__city--mobile a.city",
+      ".header__city--mobile .city-bold",
+      ".header__city--mobile a.city",
+      "a.header__city.city",
+      "a.header__city",
+      ".region-name",
+      ".current-region",
+      ".header-region",
+      "[data-testid='region-name']",
+      "[data-qa='region-name']",
+      "[data-cy='region-name']",
+      "[data-test='region-name']"
+    ],
+    "regional_container": [
+      "main",
+      "[role='main']",
+      "#content",
+      ".content",
+      ".page",
+      ".layout",
+      ".landing",
+      ".landing-page",
+      ".regional-page"
+    ],
+    "technical_error": [
+      "[data-testid='error-page']",
+      ".error-page",
+      ".page-error",
+      ".technical-error",
+      ".not-found",
+      "body.error",
+      "main [class*='error']"
+    ]
+  },
+  "report": {
+    "output_dir": "artifacts/regional_pages",
+    "results_json": "artifacts/regional_pages/results.json",
+    "summary_md": "artifacts/regional_pages/summary.md",
+    "duplicates_json": "artifacts/regional_pages/duplicates.json",
+    "screenshots_dir": "artifacts/regional_pages/screenshots"
+  }
+}
