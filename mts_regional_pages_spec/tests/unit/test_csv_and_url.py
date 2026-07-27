@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
+from helpers.config_loader import load_config
 from helpers.csv_loader import load_location_cases
 from helpers.navigation import has_redirect_loop
 from helpers.url_builder import build_location_url
@@ -64,3 +65,11 @@ def test_has_redirect_loop_detects_repeated_urls():
             "https://mts-internet.online/b",
         ]
     )
+
+
+def test_location_selectors_include_region_popup_trigger():
+    config = load_config(Path(__file__).resolve().parents[2] / "config" / "region_pages_config.json")
+
+    assert ".popup-select-region__button.city" in config.selectors.location
+    assert "xpath=(//button[contains(@class,'popup-select-region__button') and contains(@class,'city')])[1]" in config.selectors.location
+    assert "#city" in config.selectors.location

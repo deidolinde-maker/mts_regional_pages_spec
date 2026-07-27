@@ -30,6 +30,8 @@ LOCATION_SELECTORS = [
     "#city",
     "span#city",
     "a#city",
+    ".popup-select-region__button.city",
+    "xpath=(//button[contains(@class,'popup-select-region__button') and contains(@class,'city')])[1]",
     "[class*='header'][class*='city']",
     "xpath=//div[@class='header__wrapper-middle']//span[@id='city']",
     "xpath=//div[@class='footer__city']//a",

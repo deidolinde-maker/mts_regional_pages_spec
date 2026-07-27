@@ -101,6 +101,31 @@ class RegionalResultsStore:
         counts["duplicates"] = len(self._duplicates())
         return dict(counts)
 
+    def _result_url(self, result: LocationResult) -> str:
+        candidate = result.final_url or result.requested_url or ""
+        return normalize_url(candidate) if candidate else ""
+
+    def _group_results_by_problem_code(self) -> dict[str, list[str]]:
+        grouped: dict[str, list[str]] = defaultdict(list)
+        for result in self.records:
+            url = self._result_url(result)
+            if not url or not result.problems:
+                continue
+            for problem_code in result.problems:
+                grouped[problem_code].append(url)
+        return grouped
+
+    def _render_url_block(self, title: str, urls: list[str], *, include_count: bool = False) -> list[str]:
+        lines = [title]
+        if include_count:
+            lines[0] = f"{title} ({len(urls)})"
+        if not urls:
+            lines.append("- Нет")
+            return lines
+        for url in urls:
+            lines.append(f"- {url}")
+        return lines
+
     def write(self) -> None:
         self.output_dir.mkdir(parents=True, exist_ok=True)
         self.results_json.parent.mkdir(parents=True, exist_ok=True)
@@ -119,6 +144,9 @@ class RegionalResultsStore:
 
     def _render_summary_md(self) -> str:
         summary = self.summary()
+        success_urls = [self._result_url(result) for result in self.records if result.result == "OK"]
+        failed_urls = [self._result_url(result) for result in self.records if result.result != "OK" and self._result_url(result)]
+        problem_groups = self._group_results_by_problem_code()
         lines = [
             "# Отчёт по региональным страницам MTS",
             "",
@@ -145,8 +173,50 @@ class RegionalResultsStore:
             f"- Техническая страница ошибки: {summary.get('TECHNICAL_ERROR_PAGE', 0)}",
             f"- Региональный лендинг не отображён: {summary.get('REGIONAL_LANDING_NOT_DISPLAYED', 0)}",
             f"- Дублирующийся итоговый URL: {summary.get('DUPLICATE_FINAL_URL', 0)}",
+            "",
+            "## Успешные URL",
         ]
+
+        if success_urls:
+            for url in success_urls:
+                lines.append(f"- {url}")
+        else:
+            lines.append("- Нет")
+
+        lines.extend(
+            [
+                "",
+                "## Неуспешные URL",
+            ]
+        )
+
+        if failed_urls:
+            for url in failed_urls:
+                lines.append(f"- {url}")
+        else:
+            lines.append("- Нет")
+
+        lines.extend(
+            [
+                "",
+                "## Ошибки по причинам",
+            ]
+        )
+
+        for problem_code, urls in sorted(
+            problem_groups.items(),
+            key=lambda item: (-len(item[1]), self._localized_problem_label(item[0])),
+        ):
+            label = self._localized_problem_label(problem_code)
+            lines.extend(["", f"### {label}"])
+            for url in urls:
+                lines.append(f"- {url}")
         return "\n".join(lines) + "\n"
+
+    def _localized_problem_label(self, code: str) -> str:
+        from .localization import localize_problem_code
+
+        return localize_problem_code(code)
 
     def _render_duplicates_summary_md(self, duplicates: list[dict[str, Any]]) -> str:
         summary = self.summary()
