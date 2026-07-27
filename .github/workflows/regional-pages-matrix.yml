@@ -1,0 +1,56 @@
+name: MTS Regional Pages Matrix
+
+on:
+  push:
+    branches:
+      - agent/mts-regional-pages-spec
+      - main
+      - master
+  workflow_dispatch:
+
+jobs:
+  e2e-matrix:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        batch_index: [0, 1, 2, 3]
+        batch_count: [4]
+
+    defaults:
+      run:
+        working-directory: mts_regional_pages_spec
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install test dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install pytest pytest-playwright
+
+      - name: Install Playwright browsers
+        run: python -m playwright install --with-deps chromium
+
+      - name: Run regional pages batch
+        run: |
+          pytest tests/iteration_1 \
+            --run-e2e \
+            --batch-count ${{ matrix.batch_count }} \
+            --batch-index ${{ matrix.batch_index }} \
+            --report-dir artifacts/regional_pages/batch-${{ matrix.batch_index }}
+
+      - name: Upload batch artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: regional-pages-batch-${{ matrix.batch_index }}
+          path: |
+            mts_regional_pages_spec/artifacts/regional_pages/batch-${{ matrix.batch_index }}
+          if-no-files-found: ignore
