@@ -67,7 +67,16 @@ def read_first_visible_text(page, selectors: Iterable[str], timeout_ms: int = 0)
         locator = page.locator(selector).first
         try:
             if locator.count() and locator.is_visible():
-                text = locator.inner_text(timeout=timeout_ms).strip()
+                text = locator.evaluate(
+                    """(el) => {
+                        const value = el.value ?? "";
+                        const textContent = el.textContent ?? "";
+                        const aria = el.getAttribute("aria-label") ?? "";
+                        const placeholder = el.getAttribute("placeholder") ?? "";
+                        return [value, textContent, aria, placeholder].find((item) => String(item).trim()) || "";
+                    }""",
+                    timeout=timeout_ms,
+                ).strip()
                 if text:
                     return text
         except Exception:
