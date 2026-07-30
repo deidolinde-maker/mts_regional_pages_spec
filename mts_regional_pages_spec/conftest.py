@@ -87,7 +87,7 @@ def theme_storage_state(browser, app_config, tmp_path_factory):
             page.wait_for_load_state("networkidle", timeout=1500)
         except Exception:
             pass
-        set_theme_cookie(context, app_config.theme_cookie)
+        set_theme_cookie(context, app_config.theme_cookie, url=app_config.url_templates.base_url)
         wait_theme_cookie(
             context,
             app_config.theme_cookie.value,

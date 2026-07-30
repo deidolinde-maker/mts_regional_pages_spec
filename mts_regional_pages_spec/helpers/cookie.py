@@ -17,17 +17,17 @@ def get_theme_cookie(context, cookie_name: str = "theme_ab_variant") -> str | No
     return None
 
 
-def set_theme_cookie(context, cookie: ThemeCookieConfig) -> None:
-    context.add_cookies(
-        [
-            {
-                "name": cookie.name,
-                "value": cookie.value,
-                "domain": cookie.domain,
-                "path": cookie.path,
-            }
-        ]
-    )
+def set_theme_cookie(context, cookie: ThemeCookieConfig, *, url: str | None = None) -> None:
+    payload = {
+        "name": cookie.name,
+        "value": cookie.value,
+    }
+    if url:
+        payload["url"] = url
+    else:
+        payload["domain"] = cookie.domain.lstrip(".")
+        payload["path"] = cookie.path
+    context.add_cookies([payload])
 
 
 def wait_theme_cookie(context, expected: str, *, cookie_name: str = "theme_ab_variant", timeout_ms: int = 3000) -> str:
@@ -38,4 +38,3 @@ def wait_theme_cookie(context, expected: str, *, cookie_name: str = "theme_ab_va
             return current
         time.sleep(0.1)
     raise AssertionError(f"Cookie {cookie_name} did not become {expected!r} within {timeout_ms}ms")
-
