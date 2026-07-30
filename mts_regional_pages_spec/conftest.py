@@ -5,6 +5,7 @@ from pathlib import Path
 
 import pytest
 
+from helpers.cookie import set_theme_cookie, wait_theme_cookie
 from helpers import RegionalResultsStore, load_config, load_location_cases
 
 
@@ -69,6 +70,50 @@ def pytest_collection_modifyitems(config, items):
 @pytest.fixture(scope="session")
 def app_config():
     return _loaded_config()
+
+
+@pytest.fixture(scope="session")
+def theme_storage_state(browser, app_config, tmp_path_factory):
+    state_path = tmp_path_factory.mktemp("theme-b-state") / "storage_state.json"
+    context = browser.new_context()
+    page = context.new_page()
+    try:
+        page.goto(
+            app_config.url_templates.base_url,
+            wait_until="domcontentloaded",
+            timeout=app_config.timeouts.navigation,
+        )
+        try:
+            page.wait_for_load_state("networkidle", timeout=1500)
+        except Exception:
+            pass
+        set_theme_cookie(context, app_config.theme_cookie)
+        wait_theme_cookie(
+            context,
+            app_config.theme_cookie.value,
+            cookie_name=app_config.theme_cookie.name,
+            timeout_ms=app_config.timeouts.cookie_lookup,
+        )
+        page.goto(
+            app_config.url_templates.base_url,
+            wait_until="domcontentloaded",
+            timeout=app_config.timeouts.navigation,
+        )
+        try:
+            page.wait_for_load_state("networkidle", timeout=1500)
+        except Exception:
+            pass
+        context.storage_state(path=str(state_path))
+    finally:
+        context.close()
+    return state_path
+
+
+@pytest.fixture(scope="session")
+def context(browser, theme_storage_state):
+    context = browser.new_context(storage_state=str(theme_storage_state))
+    yield context
+    context.close()
 
 
 @pytest.fixture(scope="session")

@@ -3,7 +3,7 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Iterable
 
-from helpers.cookie import get_theme_cookie, set_theme_cookie, wait_theme_cookie
+from helpers.cookie import get_theme_cookie
 from helpers.navigation import (
     build_navigation_snapshot,
     classify_http_status,
@@ -68,13 +68,6 @@ def evaluate_location_case(
     landing = LandingPage(page, config)
     response = None
     try:
-        set_theme_cookie(context, config.theme_cookie)
-        wait_theme_cookie(
-            context,
-            config.theme_cookie.value,
-            cookie_name=config.theme_cookie.name,
-            timeout_ms=config.timeouts.cookie_lookup,
-        )
         response = landing.open(requested_url)
         landing.dismiss_overlays()
     except Exception as exc:
@@ -118,6 +111,7 @@ def evaluate_location_case(
         status_problem = classify_http_status(base.http_status)
         if status_problem:
             _append_problem(base.problems, status_problem)
+            return _finalize_result(base)
 
     if has_redirect_loop(base.redirect_chain):
         _append_problem(base.problems, "REDIRECT_LOOP")
